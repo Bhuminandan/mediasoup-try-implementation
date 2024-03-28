@@ -102,6 +102,7 @@ peers.on('connection', async (socket) => {
     
     socket.emit('connection-success', {
         socketId: socket.id,
+        isProducerExists: producer ? true : false
     })
 
     socket.on('disconnect', () => {
@@ -112,14 +113,16 @@ peers.on('connection', async (socket) => {
         worker = await createWorker()
     }
 
-    router = await worker.createRouter({
-        mediaCodecs
-    })
+    socket.on('createRoom', async (callback) => {
+        if (router === undefined) {
+            router = await worker.createRouter({
+                mediaCodecs
+            })
 
-    socket.on('getRouterRtpCapabilities', (callback) => {
-        callback({
-            routerRtpCapabilities: router.rtpCapabilities
-        })
+            console.log('Got the router>>>', router.id)
+        }
+
+        getRtpCapabilities(callback)
     })
 
     socket.on('createWebRTCTransport', async ( { sender }, callback) => {
@@ -287,6 +290,15 @@ const createWebRtcTransport = async (callback) => {
 
 }
 
+
+const getRtpCapabilities = async (callback) => {
+    try {
+        const rtpCapabilities = await router.rtpCapabilities
+        callback({ routerRtpCapabilities: rtpCapabilities })
+    } catch (error) {
+        console.log('Got the error inside getRtpCapabilities>>>', error)
+    }
+}
 
 
 

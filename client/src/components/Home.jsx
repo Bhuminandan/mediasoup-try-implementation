@@ -37,12 +37,17 @@ const Home = () => {
     const [localStream, setLocalStream] = useState(null)
     const [routerRtpCapabilities, setRouterRtpCapabilities] = useState(null)
     const [isProducerExists, setIsProducerExists] = useState(false)
+    const [isProducer, setIsProducer] = useState(false)
     const localVideoRef = useRef(null)
     const remoteVideoRef = useRef(null)
 
     // Making the socket connection
     useEffect(() => {
         const socket = createSocketConnection();
+
+        socket.on('connection-success', ({ socketId, isProducerExists }) => {
+            console.log('socketId>>>', socketId, isProducerExists)
+        })
 
         console.log('socket>>>', socket)
         console.log('socket>>>', socket.connected)
@@ -57,7 +62,7 @@ const Home = () => {
     // Once we have the socketState lets get the routerRtpCapabilities
     useEffect(() => {
         if (socketState) {
-            socketState.emit('getRouterRtpCapabilities', ({ routerRtpCapabilities }) => {
+            socketState.emit('createRoom', ({ routerRtpCapabilities }) => {
                 console.log("Got the routerRtpCapabilities>>>", routerRtpCapabilities)
                 setRouterRtpCapabilities(routerRtpCapabilities)
             });
@@ -305,19 +310,19 @@ const Home = () => {
 
   return (
     
-    <div className='h-screen flex items-center justify-between bg-slate-600 p-10'>
-        <div className='w-1/2  h-full border flex flex-col p-20 items-start justify-between'>
-            <div>
-                <video id="localVideo" className='rounded-2xl' ref={localVideoRef} autoPlay playsInline muted></video>
+    <div className='h-screen flex flex-col items-center justify-between bg-stone-800 p-10'>
+        <div className='flex items-start'>
+            <div className='w-1/2  h-full flex flex-col p-20 items-start justify-between'>
+                    <video id="localVideo" className='rounded-2xl' ref={localVideoRef} autoPlay playsInline muted></video>
             </div>
-            <div className='flex items-center justify-center gap-5'>
+            <div className='w-1/2 h-full flex flex-col p-20 items-start justify-between'>
+                <video ref={remoteVideoRef} className='rounded-2xl' id="remoteVideo" autoPlay playsInline></video>
+            </div>
+        </div>
+        <div className='flex items-center justify-center gap-5'>
                 <button className='bg-slate-200 p-2 rounded-2xl font-medium' id="startButton" onClick={getLocalVideo}>Start</button>
                 <button className='bg-slate-200 p-2 rounded-2xl font-medium' id="callButton" onClick={() => setStartRecvClicked(true)}>Remote</button>
                 <button className='bg-slate-200 p-2 rounded-2xl font-medium' id="hangupButton">Hang Up</button>
-            </div>
-        </div>
-        <div className='w-1/2 h-full border flex flex-col p-20 items-start justify-between'>
-            <video ref={remoteVideoRef} className='rounded-2xl' id="remoteVideo" autoPlay playsInline></video>
         </div>
     </div>
     
